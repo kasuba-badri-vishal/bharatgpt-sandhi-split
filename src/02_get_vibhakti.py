@@ -1,3 +1,4 @@
+import json
 import requests
 from bs4 import BeautifulSoup
 from tqdm import tqdm
@@ -48,16 +49,20 @@ results = []
 no_table = []
 count = 0
 
-
+final_results = []
 for word in tqdm(words):
     
+    sandhi_data = {}
+    sandhi_data['word'] = word
     result = ''
     l_velthuis=transliterate(word,sanscript.DEVANAGARI,sanscript.VELTHUIS)
-    
+    sandhi_data['eng'] = l_velthuis
+    sandhi_data['gen'] = 'Mas'
     fem_words = ['aa' 'ii', 'uu', '.rr', 'e', 'ai', 'o', 'au']
     vibakthi_type = 'Mas'
     if(ends_with_suffix(l_velthuis, fem_words)):
         vibakthi_type = 'Fem'
+        sandhi_data['gen'] = 'Fem'
 
 
     url = "http://10.198.63.39/cgi-bin/SKT/sktdeclin"
@@ -69,7 +74,7 @@ for word in tqdm(words):
         'font': 'deva'
     }
     response = requests.get(url, params=params)
-
+    sandhi_data['result'] = True
     try:
         # Check if the request was successful (status code 200)
         if response.status_code == 200:
@@ -90,21 +95,33 @@ for word in tqdm(words):
                 response = requests.get(url, params=params)
                 soup = BeautifulSoup(response.text, 'html.parser')
                 table = soup.find('table', class_='inflexion')
+                sandhi_data['gen'] = 'Fem'
                 result = get_table_result(table)
         else:
             print("Error:", response.status_code)
+            sandhi_data['result'] = False
     except:
         result = word
         count +=1
+        sandhi_data['result'] = False
                  
     if('Fatal' in result):
         result = word
         count+=1
+        sandhi_data['result'] = False
     results.append(result)
+    sandhi_data['vibhakti'] = result
+    final_results.append(sandhi_data)
     
 
 print("Total Errors: ", count)
 with open('./results2/no_suffix_vibhakti.txt', 'w') as file:
     for result in results:
         file.write(result + "\n")
+        
+        
+#save json file
+
+with open('./results2/no_suffix_vibhakti.json', 'w') as file:
+    json.dump(final_results, file, ensure_ascii=False, indent=4)
 

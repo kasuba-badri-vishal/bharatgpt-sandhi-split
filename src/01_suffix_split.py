@@ -2,19 +2,20 @@ import csv
 from aksharamukha import transliterate
 import pycdsl
 
+from config import *
+
 
 # Create an instance of CDSLCorpus321
-
 CDSL = pycdsl.CDSLCorpus()
 
 # Setup dictionaries
 dictionaries = ["MW", "AP90", "VCP", "SHS"]
 CDSL.setup(dictionaries)
-input_file = 'pratyaya.csv'#pratyaya list
-column_index_to_extract = 0  # Adjust as needed, considering 0-based indexing
 
+
+column_index_to_extract = 0  # Adjust as needed, considering 0-based indexing
 # Read the CSV file and extract the specified column
-with open(input_file, 'r') as csv_file:
+with open(PRATYAYA_FILE, 'r') as csv_file:
     csv_reader = csv.reader(csv_file)
     
     # Use list comprehension to extract the specified column
@@ -25,30 +26,27 @@ with open(input_file, 'r') as csv_file:
 
 
 suffixes_iso = []
-
 for suffix in suffixes_iso_temp:
     
     if(len(suffix) >= 3):
-   
         for dictionary in dictionaries:
             results = CDSL[dictionary].search(suffix)
             if results:
                 suffixes_iso.append(suffix)
-        
                 break
 
 suffixes_iso = list(set(suffixes_iso))
 
 
 # token_file = "tokens.txt"
-data_file = "samanantar.txt"
+
 no_suffix_tokens=[]
 stems=[]
 suffix_freq = {key: 0 for key in suffixes_iso}
-with open(data_file,'r') as file:
+with open(DATA_FILE,'r') as file:
     content = file.read()
     tokens = content.split()
-    with open("suffix_3march_final.csv", 'w', newline='') as csv_file:
+    with open(RESULTS_DIR + "suffix_3march_final.csv", 'w', newline='') as csv_file:
 
 
         tokens_iso = [transliterate.process('Devanagari','iso', txt) for txt in tokens]
@@ -79,12 +77,12 @@ with open(data_file,'r') as file:
 
 
 # Open a new file in write mode
-with open('stems.txt', 'w') as file:
+with open(RESULTS_DIR + 'stems.txt', 'w') as file:
     # Write each element to the file on a new line
     for element in stems:
         file.write(element + '\n')
 
-with open('no_suffix.txt', 'w') as file:
+with open(RESULTS_DIR + 'no_suffix.txt', 'w') as file:
     # Write each element to the file on a new line
     for element in no_suffix_tokens:
         file.write(element + '\n')
